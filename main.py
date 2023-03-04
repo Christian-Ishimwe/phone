@@ -1,6 +1,7 @@
 #the contacts management app
 from tkinter import *
 from tkinter import messagebox
+import json
 #creating the screeen
 window= Tk()
 window.title("Chris contacts")
@@ -11,13 +12,26 @@ window.config(padx=30,pady=30, bg="black")
 def save():
     contact_answer= contact_input.get()
     name_answer= name_input.get()
+    hello={
+        name_answer : contact_answer,
+    }
     if len(contact_answer)==0 or len(name_answer)==0:
         messagebox.showinfo("Empty filled","No text filled should be left")
     else:
-        yes_save = messagebox.askokcancel(f"{name_answer}", f"contacts to save:\n Name: {name_answer}\n Contacts: {contact_answer}\n are you sure you want to save this contacts?")
-        if yes_save:
-            with open("contact.txt", "a") as file:
-                file.write(f"name: {name_answer} | contact: {contact_answer}\n")
+        try:
+            with open("contact.json", "r") as file:
+                mine=json.load(file)
+        except:
+            with open("contact.json", "w") as file:
+                json.dump(hello, file, indent=4)
+        else:
+            mine.update(hello)
+            with open("contact.json", "w") as file:
+                json.dump(mine, file, indent=4)
+        finally:
+            new= f"name: {name_answer} | contact: {contact_answer}\n"
+            with open("contact.txt", "a") as all_contacts:
+                all_contacts.write(new)
             contact_input.delete(0, END)
             name_input.delete(0,END)
             name_input.focus()
@@ -31,6 +45,17 @@ def all_contacts():
     all_con.grid(row= 5, column= 1, columnspan= 4)
     close_button = Button (text ="Hide" , bg="white", fg="black",command= hide_all, font=("courier", 20))
     close_button.grid(row=20, column=5)
+def search():
+    name_answer= name_input.get()
+    with open("contact.json", "r") as new_file:
+        data = json.load(new_file)
+    try:    
+        name_found= data[name_answer]
+    except:
+        messagebox.showerror("Error",f"The name {name_answer} not in your contacts!")
+    else:
+        messagebox.showinfo(f"{name_answer}",f"the contact found:\n{name_answer}: {name_found} ")
+    
 ##creating the label elements
 #name label
 title= Label(text="Chris contact's management", font=("courier", 26), width=30, bg="black", fg="white")
@@ -52,4 +77,8 @@ submit_button.grid(row=4, column= 1)
 all_button= Button(text="ALL", font=("courier"), width=15, command= all_contacts)
 all_button.config(padx=10, pady=10)
 all_button.grid(row=4, column=2)
+
+##creating the search button
+search = Button(text="Search", font=("courier", 18), fg="black", bg="white", command=search)
+search.grid(column=5, row=1)
 window.mainloop()
